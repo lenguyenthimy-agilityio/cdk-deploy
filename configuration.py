@@ -23,7 +23,7 @@ class Config:
     github_repo_name: str
     github_owner: str
     git_branch: str
-    # secrets_manager_github_token: str
+    secrets_manager_github_token: str
 
     # Application configuration
     container_port: int
@@ -47,12 +47,11 @@ def get_config() -> Config:
     @return: The configuration for the app
     """
     env = config("environment", "")
-    print('env env', env)
     print("=====================================================================")
     print(f"====================== ENV: {env} ===================================")
     print("=====================================================================")
 
-    configuration_file = "configuration-dev.ini"
+    configuration_file = f"configuration-{env}.ini"
 
     path_to_config_file = os.path.join(os.path.dirname(__file__), configuration_file)
     if not os.path.isfile(path_to_config_file):

@@ -71,7 +71,7 @@ class BackEndStack(Stack):
             image_name = f"lenguyen:{config.env}"
             deployment_image = f"{config.aws_account_id}.dkr.ecr.{config.aws_region}.amazonaws.com/{image_name}"
             health_check_path = (
-                f"{config.health_check_path}{config.health_check_secure_token}/"
+                f"{config.health_check_path}"
             )
             
         # Define task
@@ -102,7 +102,7 @@ class BackEndStack(Stack):
         fargate_service = ecs_patterns.ApplicationLoadBalancedFargateService(
             self,
             "ecs-service",
-            # cluster=ecs.Cluster(self, "ecs-cluster", vpc=props["vpc"]),
+            # cluster=ecs.Cluster(self, "ecs-cluster"),
             task_definition=task_definition,
             public_load_balancer=True,
             desired_count=3,

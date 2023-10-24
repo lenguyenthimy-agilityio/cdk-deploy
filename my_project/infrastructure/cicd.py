@@ -9,7 +9,7 @@ from aws_cdk import (
     RemovalPolicy
 )
 
-from contructors import Construct
+from constructs import Construct
 
 from configuration import Config
 
