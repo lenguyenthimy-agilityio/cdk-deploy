@@ -3,6 +3,8 @@ from aws_cdk import (
     aws_iam as iam,
     aws_ecs as ecs,
     aws_ecs_patterns as ecs_patterns,
+    aws_ecr as ecr,
+    aws_ec2 as ec2,
     Duration,
     CfnOutput,
     SecretValue,
@@ -63,17 +65,22 @@ class BackEndStack(Stack):
         # -------------------------------------------------------------------------
         # Define the image for deployment based on first time initialize or update
         # -------------------------------------------------------------------------
-        initialize = env_config("initialize", cast=bool, default=False)
-        if initialize:
-            deployment_image = "amazon/amazon-ecs-sample"
-            health_check_path = "/"
-        else:
-            image_name = f"lenguyen:{config.env}"
-            deployment_image = f"{config.aws_account_id}.dkr.ecr.{config.aws_region}.amazonaws.com/{image_name}"
-            health_check_path = (
-                f"{config.health_check_path}"
-            )
-            
+        # initialize = env_config("initialize", cast=bool, default=False)
+        # if initialize:
+        #     deployment_image = "amazon/amazon-ecs-sample"
+        #     health_check_path = "/"
+        # else:
+        #     image_name = f"lenguyen:{config.env}"
+        #     deployment_image = f"{config.aws_account_id}.dkr.ecr.{config.aws_region}.amazonaws.com/{image_name}"
+        #     health_check_path = (
+        #         f"{config.health_check_path}"
+        #     )
+        
+        ecr_repository = ecr.Repository(
+            self,  
+            "ecs-devops-repository", 
+            repository_name="ecs-devops-repository")
+
         # Define task
         task_definition = ecs.FargateTaskDefinition(
             self,
@@ -87,7 +94,7 @@ class BackEndStack(Stack):
         container = task_definition.add_container(
             "web",
             # It will be replaced by the ECR container which is built from CodeBuild
-            image=ecs.ContainerImage.from_registry(deployment_image),
+            image=ecs.ContainerImage.from_registry("amazon/amazon-ecs-sample"),
             logging=ecs.AwsLogDriver(stream_prefix="ecs-logs"),
             environment={
                 "ENV": config.env,
@@ -99,42 +106,18 @@ class BackEndStack(Stack):
             )
         )
         
-        fargate_service = ecs_patterns.ApplicationLoadBalancedFargateService(
+        vpc = ec2.Vpc(self, "ecs-devops-vpc", max_azs=3)
+
+        cluster = ecs.Cluster(self, "ecs-devops-cluster", cluster_name="ecs-devops-cluster", vpc=vpc)
+        
+        fargate_service = ecs.FargateService(
             self,
             "ecs-service",
-            # cluster=ecs.Cluster(self, "ecs-cluster"),
+            cluster=cluster,
             task_definition=task_definition,
-            public_load_balancer=True,
-            desired_count=3,
-            listener_port=int(config.listener_port),
-            assign_public_ip=True,
+            service_name="ecs-devops-service",
         )
-        
-        # Config health check.
-        fargate_service.target_group.configure_health_check(
-            path=health_check_path,
-            interval=Duration.seconds(120),
-            unhealthy_threshold_count=10,
-            healthy_threshold_count=5,
-        )
-
-        # Config auto scaling
-        scaling = fargate_service.service.auto_scale_task_count(max_capacity=6)
-        scaling.scale_on_cpu_utilization(
-            "CpuScaling",
-            target_utilization_percent=10,
-            scale_in_cooldown=Duration.seconds(amount=60),
-            scale_out_cooldown=Duration.seconds(amount=60),
-        )
-        
         self.output_props["fargate_service"] = fargate_service
-        
-        # OUTPUT
-        CfnOutput(
-            self,
-            "LoadBalancerDNS",
-            value=fargate_service.load_balancer.load_balancer_dns_name,
-        )
         
     # pass objects to another stack
     @property
