@@ -5,8 +5,6 @@ import aws_cdk as cdk
 
 from my_project.infrastructure.s3 import S3Stack
 from my_project.infrastructure.backend import BackEndStack
-from my_project.infrastructure.cicd import BackendCICDStack
-from my_project.infrastructure.vpc import VpcStack
 from configuration import get_config
 
 
