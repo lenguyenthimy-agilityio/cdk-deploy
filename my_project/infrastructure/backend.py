@@ -86,11 +86,11 @@ class BackEndStack(Stack):
             )
         )
         
-        vpc = ec2.Vpc(self, "ecs-devops-vpc", max_azs=3)
+        # vpc = ec2.Vpc(self, "ecs-devops-vpc", max_azs=3)
 
         cluster = ecs.Cluster(
             self, "ecs-devops-cluster", 
-            cluster_name="ecs-devops-cluster", vpc=vpc)
+            cluster_name="ecs-devops-cluster", vpc=props["vpc"])
         
         # Create fargate service and ALB
         fargate_service = ecs_patterns.ApplicationLoadBalancedFargateService(
