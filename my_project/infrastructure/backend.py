@@ -37,6 +37,7 @@ class BackEndStack(Stack):
             props (dict): Input properties.
             config (Config): Configuration
         """
+        db_instance = props["db_instance"]
         
         role_name = f"ecs-task-role-{self.stack_name}"
         task_role = iam.Role(
@@ -78,6 +79,11 @@ class BackEndStack(Stack):
             logging=ecs.AwsLogDriver(stream_prefix="ecs-logs"),
             environment={
                 "ENV": config.env,
+                # Database configuration
+                "DATABASE_HOST": db_instance.db_instance_endpoint_address,
+                "DATABASE_NAME": config.db_name,
+                "DATABASE_USER": config.db_username,
+                "DATABASE_PASSWORD": config.db_password
             },
         ) 
         container.add_port_mappings(

@@ -39,6 +39,12 @@ class Config:
     # Health check secure token
     # health_check_secure_token: str
 
+    # Database settings
+    db_name: str
+    db_username: str
+    db_password: str
+    db_port: int
+    
 
 def get_config() -> Config:
     """
